@@ -22,21 +22,22 @@
   when: external_disk_format.stat.exists == false
 
 - name: sfex partition
-  shell: parted -s /dev/{{external_disk}} mkpart SFEX 0% 1%
+  shell: parted -s /dev/{{external_disk}} mkpart SFEX 0G 1G
   when: external_disk_format.stat.exists == false
 
 - name: pgdata partition
-  shell: parted -s /dev/{{external_disk}} mkpart DATA 1% 50%
+  shell: parted -s /dev/{{external_disk}} mkpart DATA 1G 100G
   when: external_disk_format.stat.exists == false
 
 - name: pgxlog partition
-  shell: parted -s /dev/{{external_disk}} mkpart WAL 51% 60%
+  shell: parted -s /dev/{{external_disk}} mkpart WAL 100G 110G
   when: external_disk_format.stat.exists == false
 
 - name: pgarch partition
-  shell: parted -s /dev/{{external_disk}} mkpart ARC 61% 70%
+  shell: parted -s /dev/{{external_disk}} mkpart ARC 110G 120G
   when: external_disk_format.stat.exists == false
 
 - name: nfs partition
-  shell: parted -s /dev/{{external_disk}} mkpart NFS 71% 100%
+  shell: parted -s /dev/{{external_disk}} mkpart NFS 120G 200G
   when: external_disk_format.stat.exists == false
+
