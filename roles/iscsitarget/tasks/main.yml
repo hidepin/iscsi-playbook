@@ -41,3 +41,19 @@
   shell: parted -s /dev/{{external_disk}} mkpart NFS 120G 200G
   when: external_disk_format.stat.exists == false
 
+- name: iscsi target settings
+  template: src=targets.conf.j2 dest=/etc/tgt/targets.conf owner=root group=root mode=0600 backup=true
+  register: is_target_setting
+
+- name: backup iscsi target setting
+  fetch:
+    src={{item}}
+    dest="backup/{{ansible_date_time.date}}-{{ansible_date_time.time|regex_replace(':', '')}}"
+  with_items:
+    - "{{is_target_setting}}"
+    - /etc/tgt/targets.conf
+  when: is_target_setting|changed
+
+- name: delete iscsi target setting backup
+  file: path={{is_target_setting.backup_file}} state=absent
+  when: is_target_setting|changed and is_target_setting.backup_file is defined
