@@ -4,3 +4,39 @@
   yum: name={{item}} state=present
   with_items:
     - scsi-target-utils
+
+- name: external disk status
+  stat: path=/dev/{{external_disk}}
+  register: external_disk_status
+
+- name: external disk check
+  fail: msg="can not find external disk."
+  when: external_disk_status.stat.exists == false
+
+- name: external disk format status
+  stat: path=/dev/"{{external_disk}}"1
+  register: external_disk_format
+
+- name: mklabel
+  shell: parted -s /dev/{{external_disk}} mklabel gpt
+  when: external_disk_format.stat.exists == false
+
+- name: sfex partition
+  shell: parted -s /dev/{{external_disk}} mkpart SFEX 0% 1%
+  when: external_disk_format.stat.exists == false
+
+- name: pgdata partition
+  shell: parted -s /dev/{{external_disk}} mkpart DATA 1% 50%
+  when: external_disk_format.stat.exists == false
+
+- name: pgxlog partition
+  shell: parted -s /dev/{{external_disk}} mkpart WAL 51% 60%
+  when: external_disk_format.stat.exists == false
+
+- name: pgarch partition
+  shell: parted -s /dev/{{external_disk}} mkpart ARC 61% 70%
+  when: external_disk_format.stat.exists == false
+
+- name: nfs partition
+  shell: parted -s /dev/{{external_disk}} mkpart NFS 71% 100%
+  when: external_disk_format.stat.exists == false
