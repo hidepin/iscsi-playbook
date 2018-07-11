@@ -9,7 +9,10 @@ rhel_subscription_enabled: True
 ############################################################
 # iscsitarget parameter
 ############################################################
-external_disk: sdb
+iscsi_disk:
+  - disk: "/dev/sdb"
+    partition:
+      - { num: 1, part_start: "0%", part_end: "100%" }
 
 ############################################################
 # common role settin

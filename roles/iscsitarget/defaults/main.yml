@@ -1,0 +1,10 @@
+---
+# file: roles/postgresql/defaults/main.yml
+proxy_env:
+  no_proxy: '*'
+#  http_proxy: http://172.16.111.1:8080
+#  https_proxy: http://172.16.111.1:8080
+iscsi_disk:
+#  - disk: "/dev/sdb"
+#    partition:
+#      - { num: 1, part_start: "0%", part_end: "100%" }

@@ -1,0 +1,22 @@
+---
+# file: roles/iscsitarget/tasks/iscsi_partition.yml
+- block:
+  - name: "parted device [{{ disk_item.path }}]"
+    parted:
+      device: "{{ disk_item.disk }}"
+      label: gpt
+      number: "{{ item.num }}"
+      state: present
+      part_start: "{{ item.part_start }}"
+      part_end: "{{ item.part_end }}"
+    with_items: "{{ disk_item.partition }}"
+
+  - name: "create fs [{{ disk_item.path }}]"
+    filesystem:
+      fstype: xfs
+      dev: "{{ disk_item.disk }}{{ item.num }}"
+    with_items: "{{ disk_item.partition }}"
+
+  when: >
+    disk_item.disk is defined and
+    disk_item.disk != ""
