@@ -14,4 +14,3 @@
     enabled: yes
   with_items:
     - iscsid
-    - iscsi
