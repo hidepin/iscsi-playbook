@@ -11,12 +11,6 @@
       part_end: "{{ item.part_end }}"
     with_items: "{{ disk_item.partition }}"
 
-  - name: "create fs [{{ disk_item.path }}]"
-    filesystem:
-      fstype: xfs
-      dev: "{{ disk_item.disk }}{{ item.num }}"
-    with_items: "{{ disk_item.partition }}"
-
   when: >
     disk_item.disk is defined and
     disk_item.disk != ""
