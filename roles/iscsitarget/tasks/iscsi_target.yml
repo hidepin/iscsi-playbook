@@ -14,7 +14,16 @@
     with_items: "{{ targetcli.results }}"
     when: item.rc != 0
 
+  - name: check iscsi iqn of target
+    command: "/bin/targetcli ls /iscsi/{{ iscsi_iqn }}:{{ ansible_hostname }}"
+    register: targetcli
+    changed_when: false
+    failed_when: false
 
+  - name: create iscsi iqn of target
+    command : >-
+      /bin/targetcli /iscsi create {{ iscsi_iqn }}:{{ ansible_hostname }}
+    when: targetcli.rc != 0
 
   when: >
     disk_item.disk is defined and
