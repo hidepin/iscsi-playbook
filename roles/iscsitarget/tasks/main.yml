@@ -7,8 +7,14 @@
   with_items:
     - targetcli
 
-- name: setup iscsi partition
+- name: create iscsi partition
   include_tasks: iscsi_partition.yml
+  with_items: "{{ iscsi_disk }}"
+  loop_control:
+    loop_var: disk_item
+
+- name: export iscsi partition
+  include_tasks: iscsi_target.yml
   with_items: "{{ iscsi_disk }}"
   loop_control:
     loop_var: disk_item
