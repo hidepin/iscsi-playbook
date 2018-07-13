@@ -1,18 +1,18 @@
 ---
 # file: roles/iscsitarget/tasks/iscsi_target.yml
 - block:
-  - name: target check
+  - name: check backstores block of target
     command: "/bin/targetcli ls /backstores/block/{{ item.block_name }}"
     register: targetcli
     changed_when: false
     failed_when: false
     with_items: "{{ disk_item.partition }}"
 
-  - name: create /backstores/block
+  - name: create backstores block of target
     command : >-
       /bin/targetcli /backstores/block create name={{ item.item.block_name }} dev={{ disk_item.disk }}{{ item.item.num}}
     with_items: "{{ targetcli.results }}"
-    when: item.rc == 1
+    when: item.rc != 0
 
 
 
