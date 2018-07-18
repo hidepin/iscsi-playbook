@@ -38,7 +38,20 @@
     with_items: "{{ targetcli.results }}"
     when: item.rc != 0
 
+  - name: check tpg1 acls of target
+    command: "/bin/targetcli ls /iscsi/{{ iscsi_iqn }}:{{ ansible_hostname }}/tpg1/acls/{{ iscsi_iqn }}:{{ hostvars[item].ansible_hostname }}"
+    register: targetcli
+    changed_when: false
+    failed_when: false
+    with_items: "{{ groups.initiator }}"
+
+  - name: create tpg1 acls of target
+    command : >-
+      /bin/targetcli /iscsi/{{ iscsi_iqn }}:{{ ansible_hostname }}/tpg1/acls create {{ item.cmd[2]|regex_replace(".*/", "") }}
+    with_items:
+      - "{{ targetcli.results }}"
+    when: item.rc != 0
+
   when: >
     disk_item.disk is defined and
     disk_item.disk != ""
-
