@@ -22,3 +22,12 @@
     owner: root
     group: root
     mode: 0644
+  register: initiatorname_results
+
+- name: iscsid restart
+  service:
+    name: "{{ item }}"
+    state: restarted
+  with_items:
+    - iscsid
+  when: initiatorname_results.changed
