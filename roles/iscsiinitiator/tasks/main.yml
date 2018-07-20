@@ -31,3 +31,22 @@
   with_items:
     - iscsid
   when: initiatorname_results.changed
+
+- name: check iscsiadm node
+  command: "/usr/sbin/iscsiadm -m node"
+  register: iscsiadm
+  changed_when: false
+  failed_when: false
+
+- name: discovery iscsiadm node
+  command: "/usr/sbin/iscsiadm -m discovery -t st -p {{ hostvars[item].ansible_default_ipv4.address }}"
+  with_items: "{{ groups.target }}"
+  when: iscsiadm.rc != 0
+
+- name: restart iscsi
+  service:
+    name: "{{ item }}"
+    state: restarted
+  with_items:
+    - iscsi
+  when: iscsiadm.rc != 0
