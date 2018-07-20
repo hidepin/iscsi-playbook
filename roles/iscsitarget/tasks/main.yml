@@ -1,59 +1,26 @@
 ---
 # file: roles/iscsitarget/tasks/main.yml
 - name: packages install
-  yum: name={{item}} state=present
+  yum:
+    name: "{{ item }}"
+    state: present
   with_items:
-    - scsi-target-utils
+    - targetcli
 
-- name: external disk status
-  stat: path=/dev/{{external_disk}}
-  register: external_disk_status
+- name: create iscsi partition
+  include_tasks: iscsi_partition.yml
+  with_items: "{{ iscsi_disk }}"
+  loop_control:
+    loop_var: disk_item
 
-- name: external disk check
-  fail: msg="can not find external disk."
-  when: external_disk_status.stat.exists == false
+- name: export iscsi partition
+  include_tasks: iscsi_target.yml
+  with_items: "{{ iscsi_disk }}"
+  loop_control:
+    loop_var: disk_item
 
-- name: external disk format status
-  stat: path=/dev/"{{external_disk}}"1
-  register: external_disk_format
-
-- name: mklabel
-  shell: parted -s /dev/{{external_disk}} mklabel gpt
-  when: external_disk_format.stat.exists == false
-
-- name: sfex partition
-  shell: parted -s /dev/{{external_disk}} mkpart SFEX 0G 1G
-  when: external_disk_format.stat.exists == false
-
-- name: pgdata partition
-  shell: parted -s /dev/{{external_disk}} mkpart DATA 1G 100G
-  when: external_disk_format.stat.exists == false
-
-- name: pgxlog partition
-  shell: parted -s /dev/{{external_disk}} mkpart WAL 100G 110G
-  when: external_disk_format.stat.exists == false
-
-- name: pgarch partition
-  shell: parted -s /dev/{{external_disk}} mkpart ARC 110G 120G
-  when: external_disk_format.stat.exists == false
-
-- name: nfs partition
-  shell: parted -s /dev/{{external_disk}} mkpart NFS 120G 200G
-  when: external_disk_format.stat.exists == false
-
-- name: iscsi target settings
-  template: src=targets.conf.j2 dest=/etc/tgt/targets.conf owner=root group=root mode=0600 backup=true
-  register: is_target_setting
-
-- name: backup iscsi target setting
-  fetch:
-    src={{item}}
-    dest="backup/{{ansible_date_time.date}}-{{ansible_date_time.time|regex_replace(':', '')}}"
-  with_items:
-    - "{{is_target_setting}}"
-    - /etc/tgt/targets.conf
-  when: is_target_setting|changed
-
-- name: delete iscsi target setting backup
-  file: path={{is_target_setting.backup_file}} state=absent
-  when: is_target_setting|changed and is_target_setting.backup_file is defined
+- name: target start
+  service:
+    name: target
+    state: started
+    enabled: yes

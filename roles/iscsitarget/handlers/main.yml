@@ -1,0 +1,5 @@
+---
+# file: roles/iscsitarget/handlers/main.yml
+- name: targetcli saveconfig
+  command: >-
+    /bin/targetcli saveconfig

@@ -1,0 +1,61 @@
+---
+# file: roles/iscsitarget/tasks/iscsi_target.yml
+- block:
+  - name: check backstores block of target
+    command: "/bin/targetcli ls /backstores/block/{{ item.block_name }}"
+    register: targetcli
+    changed_when: false
+    failed_when: false
+    with_items: "{{ disk_item.partition }}"
+
+  - name: create backstores block of target
+    command: >-
+      /bin/targetcli /backstores/block create name={{ item.item.block_name }} dev={{ disk_item.disk }}{{ item.item.num}}
+    with_items: "{{ targetcli.results }}"
+    when: item.rc != 0
+    notify: targetcli saveconfig
+
+  - name: check iscsi iqn of target
+    command: "/bin/targetcli ls /iscsi/{{ iscsi_iqn }}:{{ ansible_hostname }}"
+    register: targetcli
+    changed_when: false
+    failed_when: false
+
+  - name: create iscsi iqn of target
+    command: >-
+      /bin/targetcli /iscsi create {{ iscsi_iqn }}:{{ ansible_hostname }}
+    when: targetcli.rc != 0
+    notify: targetcli saveconfig
+
+  - name: check tpg1 lun of target
+    command: "/bin/targetcli ls /iscsi/{{ iscsi_iqn }}:{{ ansible_hostname }}/tpg1/luns/lun{{ item.0 }}"
+    register: targetcli
+    changed_when: false
+    failed_when: false
+    with_indexed_items: "{{ disk_item.partition }}"
+
+  - name: create tpg1 lun of target
+    command: >-
+      /bin/targetcli /iscsi/{{ iscsi_iqn }}:{{ ansible_hostname }}/tpg1/luns create /backstores/block/{{ item.item[1].block_name }}
+    with_items: "{{ targetcli.results }}"
+    when: item.rc != 0
+    notify: targetcli saveconfig
+
+  - name: check tpg1 acls of target
+    command: "/bin/targetcli ls /iscsi/{{ iscsi_iqn }}:{{ ansible_hostname }}/tpg1/acls/{{ iscsi_iqn }}:{{ hostvars[item].ansible_hostname }}"
+    register: targetcli
+    changed_when: false
+    failed_when: false
+    with_items: "{{ groups.initiator }}"
+
+  - name: create tpg1 acls of target
+    command: >-
+      /bin/targetcli /iscsi/{{ iscsi_iqn }}:{{ ansible_hostname }}/tpg1/acls create {{ item.cmd[2]|regex_replace(".*/", "") }}
+    with_items:
+      - "{{ targetcli.results }}"
+    when: item.rc != 0
+    notify: targetcli saveconfig
+
+  when: >
+    disk_item.disk is defined and
+    disk_item.disk != ""

@@ -2,8 +2,12 @@
 # file: all.yml
 - hosts: all
   roles:
-    - { role: common, when: "ansible_os_family == 'RedHat'" }
+    - { role: common, when: "ansible_os_family == 'RedHat' and exec_common_role" }
 
 - hosts: target
   roles:
     - { role: iscsitarget, when: "ansible_os_family == 'RedHat'" }
+
+- hosts: initiator
+  roles:
+    - { role: iscsiinitiator, when: "ansible_os_family == 'RedHat'" }
